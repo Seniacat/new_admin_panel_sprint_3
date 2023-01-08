@@ -3,10 +3,10 @@
 Ваша задача в этом уроке — загрузить данные в Elasticsearch из PostgreSQL. Подробности задания в папке `etl`.
 
 ## Запуск проекта в контейнере
-Клонируйте репозиторий и перейдите в директорию django_api:
+Клонируйте репозиторий и перейдите в директорию new_admin_panel_sprint_3:
 ```
-git clone https://github.com/Seniacat/new_admin_panel_sprint_2
-cd new_admin_panel_sprint_2/django_api
+git clone https://github.com/Seniacat/new_admin_panel_sprint_3
+cd new_admin_panel_sprint_3/
 ```
 Создайте и заполните .env файл с переменными окружения по примеру env.example:
 ```
