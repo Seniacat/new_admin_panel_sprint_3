@@ -1,0 +1,9 @@
+.idea
+.dockerignore
+.gitignore
+files
+images
+venv
+__pycache__/
+README.md
+movies_admin/static

@@ -1,0 +1,9 @@
+flake8==6.0.0
+django==3.2.9
+django-debug-toolbar==3.7.0
+django-extensions==3.2.1
+djangorestframework==3.12.4
+django-split-settings==1.2.0
+psycopg2==2.9.5
+python-dotenv==0.21.0
+uwsgi==2.0.20

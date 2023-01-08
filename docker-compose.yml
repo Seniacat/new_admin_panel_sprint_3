@@ -1,0 +1,63 @@
+version: '3'
+services:
+
+  db:
+    image: postgres:13.4
+    container_name: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.8
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+  service:
+    build:
+      context: ./movies-admin
+      dockerfile: Dockerfile
+    container_name: django_app
+    restart: always
+    volumes:
+      - static:/opt/app/static/
+    expose:
+      - 8000
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+
+  etl:
+    build: postgres_to_es/
+    restart: always
+    depends_on:
+      - elasticsearch
+      - service
+    env_file:
+      - ./.env
+  
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs:/etc/nginx/conf.d:ro
+      - ./data:/data/:ro
+      - static:/var/html/static/
+    depends_on:
+      - service
+    ports:
+      - "80:80"
+
+
+volumes:
+  db_data:
+  static:
+  elasticdata:
