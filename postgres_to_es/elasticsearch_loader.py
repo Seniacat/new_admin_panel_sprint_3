@@ -1,26 +1,29 @@
 import json
-import logging
 from typing import Iterator, Tuple
 
 import backoff
 from elasticsearch import Elasticsearch, helpers
 
 from config import backoff_config, es_conf
+from logger import logger
 from state import JsonFileStorage, State
-
-logger = logging.getLogger('ES_Loader')
 
 
 class ELasticSearchLoader:
     """Класс для загрузки данных в Elasticsearch."""
     @backoff.on_exception(**backoff_config)
-    def __init__(self, key: str) -> None:
-        self.connection = Elasticsearch(es_conf)
+    def __init__(self) -> None:
+        self.conf = es_conf
         self.index = 'movies'
-        self.key = key
         self.batch_size = 100
         self.last_time = None
         self.state = State(JsonFileStorage('./etl_state.json'))
+        self.connection = self._create_connection()
+
+    @backoff.on_exception(**backoff_config)
+    def _create_connection(self) -> Elasticsearch:
+        """Создание подключения для Elasticsearch."""
+        return Elasticsearch([f"{self.conf.host}:{self.conf.port}"])
 
     @backoff.on_exception(**backoff_config)
     def create_index(self, file_path: str) -> None:
@@ -36,7 +39,7 @@ class ELasticSearchLoader:
         return self.connection.indices.exists(index=self.index)
 
     def generate_docs(
-        self, data: Iterator[Tuple[dict, str]]
+        self, data: Iterator[Tuple[dict, str]], key: str
     ) -> Iterator[dict]:
         count = 0
         for film, updated_at in data:
@@ -46,19 +49,19 @@ class ELasticSearchLoader:
             yield film
 
             if count % self.batch_size == 0:
-                self.state.set_state(self.key, self.last_time)
+                self.state.set_state(key, self.last_time)
 
         if self.last_time:
-            self.state.set_state(self.key, self.last_time)
+            self.state.set_state(key, self.last_time)
 
     @backoff.on_exception(**backoff_config)
-    def bulk_load(self, data) -> None:
+    def bulk_load(self, data, key) -> None:
         """ Загрузка в Elasticsearch подготовленных данных
         пачками размера batch_sise и запись в состояние
         времени последней строки
         """
 
-        docs_generator = self.generate_docs(data)
+        docs_generator = self.generate_docs(data, key)
 
         success, failed = helpers.bulk(
             client=self.connection,

@@ -1,4 +1,3 @@
-from typing import List, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -17,12 +16,12 @@ class Genre(UUIDModel):
 
 
 class Movie(UUIDModel):
-    imdb_rating: Optional[float]
-    genre: Union[List[str], str]
+    imdb_rating: float | None
+    genre: list[str] | str
     title: str
-    description: Optional[str]
-    actors: Optional[List[Person]]
-    writers: Optional[List[Person]]
-    director: Optional[List[Person]]
-    actors_names: Optional[List[str]]
-    writers_names: Optional[List[str]]
+    description: str | None
+    actors: list[Person] | None
+    writers: list[Person] | None
+    director: list[Person] | None
+    actors_names: list[str] | None
+    writers_names: list[str] | None

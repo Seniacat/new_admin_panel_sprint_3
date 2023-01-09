@@ -1,31 +1,21 @@
-import logging
-import os
-
 import backoff
-from dotenv import load_dotenv
+from pydantic import BaseSettings, Field
 
-load_dotenv()
-
-
-logger = logging.getLogger('ES_Loader')
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+from logger import logger
 
 
-dsl = {
-    'dbname': os.getenv('DB_NAME'),
-    'user': os.getenv('POSTGRES_USER'),
-    'password': os.getenv('POSTGRES_PASSWORD'),
-    'host': os.environ.get('DB_HOST'),
-    'port': os.environ.get('DB_PORT'),
-}
+class PostgresConfig(BaseSettings):
+    dbname: str = Field(..., env='DB_NAME')
+    user: str = Field(..., env='POSTGRES_USER')
+    password: str = Field(..., env='POSTGRES_PASSWORD')
+    host: str = Field(..., env='DB_HOST')
+    port: int = Field(..., env='DB_PORT')
 
-es_conf = [{
-    'host': os.getenv('ELASTICSEARCH_HOST'),
-    'port': os.getenv('ELASTICSEARCH_PORT'),
-}]
+
+class ES_Config(BaseSettings):
+    host: str = Field(..., env='ELASTICSEARCH_HOST')
+    port: str = Field(..., env='ELASTICSEARCH_PORT')
+
 
 backoff_config = {
     'wait_gen': backoff.expo,
@@ -38,3 +28,6 @@ backoff_config = {
 index_file = './indexes/movies.json'
 
 sleep_freq = 300
+
+postgres_dsn = PostgresConfig()
+es_conf = ES_Config()

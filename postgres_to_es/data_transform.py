@@ -1,9 +1,9 @@
-from typing import Iterator, List, Optional
+from typing import Iterator
 
 from models import Movie, Person
 
 
-def get_names(persons: Optional[List[Person]]):
+def get_names(persons: list[Person] | None):
     return [Person.name for Person in persons] if persons else []
 
 

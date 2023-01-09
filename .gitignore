@@ -93,3 +93,5 @@ local_settings.py
 \venv
 
 static/
+
+etl_state.json

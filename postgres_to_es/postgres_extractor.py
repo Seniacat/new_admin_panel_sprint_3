@@ -1,24 +1,19 @@
 from datetime import datetime
 
 import backoff
-import psycopg2
-from dotenv import load_dotenv
-from psycopg2.extras import DictCursor
 
-from config import backoff_config, dsl
+from config import backoff_config
 from models import Movie
 from pg_queries import (get_genre_updates, get_movies_updates,
                         get_person_updates)
 from state import JsonFileStorage, State
 
-load_dotenv()
-
 
 class PostgresExtractor:
     """Класс для выгрузки данных из БД Postgres."""
     @backoff.on_exception(**backoff_config)
-    def __init__(self, key: str):
-        self.pg_conn = psycopg2.connect(**dsl, cursor_factory=DictCursor)
+    def __init__(self, pg_conn, key: str):
+        self.pg_conn = pg_conn
         self.cursor = self.pg_conn.cursor()
         self.batch_size = 100
         self.last_time = None
@@ -38,7 +33,7 @@ class PostgresExtractor:
         return self.state.get_state(self.key)
 
     def set_start_time(self):
-        self.last_time = datetime.fromisoformat('1979-01-01 12:00:00.000001')
+        self.last_time = datetime.min
         self.state.set_state(self.key, str(self.last_time))
         return self.last_time
 
@@ -50,9 +45,6 @@ class PostgresExtractor:
             state = self.set_start_time()
         movies_query = self.get_query(state)
         self.cursor.execute(movies_query)
-        while True:
-            table_rows = self.cursor.fetchmany(self.batch_size)
-            if not table_rows:
-                break
+        while table_rows := self.cursor.fetchmany(self.batch_size):
             for row in table_rows:
-                yield (Movie(**row), str(row['updated_at']))
+                yield Movie(**row), str(row['updated_at'])
